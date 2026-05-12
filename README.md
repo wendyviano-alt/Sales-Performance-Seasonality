@@ -37,7 +37,7 @@ To answer this, the dashboard investigates:
 - Were discounts higher in February?
 - Did certain products or categories drive the increase?
 - Did online or physical stores perform differently?
-- Were specific countries or regions responsible for the difference?
+- Were specific countries responsible for the difference?
 
 
 ## Tools Used
@@ -164,43 +164,7 @@ The analysis showed that the 50+ age group was the strongest customer segment.
 ![2023 Customer Insights & Targeting](Screenshots/2023%20Customer%20Insights%20%26%20Targeting.png)
 
 
-
-### 5. Product Sales & Profitability
-
-The product analysis focuses on understanding which products, categories, and product colors contributed to sales performance.
-
-This part of the dashboard helps answer:
-
-- Which products generated the most sales?
-- Which products sold the most by quantity?
-- Which products had the strongest margin?
-- Did product color influence sales performance?
-- Did product demand change between strong and weak months?
-
-The purpose of this page is not only to identify top-selling products, but also to understand whether those products are profitable and worth focusing on.
-
-A high-selling product is not always the best product to promote if the cost is high or the margin is weak. For that reason, the analysis compares sales, cost, margin, quantity sold, and product performance over time.
-
-
-
-### 6. Regional & Store Performance
-
-The regional and store performance analysis focuses on where sales came from and whether sales performance was driven by online or physical store activity.
-
-This part of the dashboard helps answer:
-
-- Did online or physical stores drive stronger sales months?
-- Which countries generated the most physical store sales?
-- Were high-sales countries also profitable?
-- Was April’s low performance isolated to one region or broader across channels?
-
-Online sales were analyzed separately because online is a sales channel, not a physical country.
-
-This helped determine whether April’s lower performance was a regional issue, a channel issue, or part of a broader demand pattern.
-
-
-
-### 7. 2023 Seasonality Findings
+### 5. 2023 Seasonality Findings
 
 This page summarizes the main findings from the 2023 sales pattern.
 
@@ -212,7 +176,7 @@ Pricing, discounts, and average order value did not change enough to explain the
 
 
 
-### 8. Sales Forecast
+### 6. Sales Forecast
 
 The final analytical page adds forecasting using Python inside Power BI.
 
@@ -223,7 +187,6 @@ SARIMA was used because the data is monthly and shows seasonality.
 The forecast is intended as a planning tool, not a guaranteed prediction.
 
 ![2026 Sales Forecast](Screenshots/2026%20Sales%20Forecast.png)
-
 
 
 ## Key Findings
@@ -243,9 +206,9 @@ The forecast is intended as a planning tool, not a guaranteed prediction.
    This segment generated the highest sales activity.
 
 6. **Product demand and store channel performance helped provide additional business context.**
+   When comparing 2022 and 2023, the sales per channel switched from higher sales in physical stores (2022) to online store (2023+).
 
-7. **Forecasting was added to support future planning.**
-
+8. **Forecasting was added to support future planning.**
 
 
 ## Business Recommendations
@@ -253,13 +216,12 @@ The forecast is intended as a planning tool, not a guaranteed prediction.
 Based on the analysis, I would recommend:
 
 - Investigating what drove higher customer and order volume in February.
-- Reviewing why April had weaker demand.
+- Reviewing why April had weaker demand, is it caused by the Taxes Season?
 - Continuing to monitor the 50+ customer segment because it generated the strongest sales activity.
 - Comparing product performance across strong and weak months.
 - Reviewing store channel performance separately for online and physical stores.
 - Adding marketing campaign data in the future to test whether advertising contributed to peak sales months.
 - Using the forecast as a planning tool for future sales expectations.
-
 
 
 ## Forecasting Method
@@ -272,10 +234,9 @@ The forecasting process included:
 2. Preparing a monthly time-series dataset
 3. Applying a SARIMA forecasting model
 4. Forecasting the next 12 months
-5. Visualizing forecasted sales, orders, and average order value
+5. Visualizing forecasted sales, and orders
 
 SARIMA was selected because it can model monthly seasonality.
-
 
 
 ## Limitations
@@ -295,7 +256,6 @@ To improve the analysis in the future, I would add:
 - Marketing channel
 
 
-
 ## Skills Demonstrated
 
 - SQL Server data cleaning
@@ -310,7 +270,6 @@ To improve the analysis in the future, I would add:
 - Python forecasting inside Power BI
 - SARIMA time-series forecasting
 - Business storytelling with data
-
 
 
 ## Project Summary
