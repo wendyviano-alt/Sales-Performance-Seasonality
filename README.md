@@ -55,7 +55,6 @@ To answer this, the dashboard investigates:
 
 The raw data was first organized in SQL Server before being imported into Power BI.
 
-```text
 Raw Data
    ↓
 SQL Server Cleaning Views
