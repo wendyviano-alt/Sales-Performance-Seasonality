@@ -9,7 +9,6 @@ During the internship, I worked on cleaning and organizing sales data, building 
 The dashboard demonstrates my ability to clean data, build a data model, create Power BI reports, write DAX measures, and add Python forecasting to support business analysis.
 
 
-
 ## Project Overview
 
 This project analyzes sales performance using SQL Server, Power BI, DAX, and Python. It was completed during my internship at ACA Group and focuses on turning raw sales data into a structured business intelligence dashboard.
@@ -19,7 +18,6 @@ The main goal was to understand overall business performance and then investigat
 I built a full sales analytics dashboard. While analyzing 2023 sales, I discovered that February had the highest sales and April had the lowest. Then I investigated why.
 
 The analysis focuses on identifying whether the difference between February and April was caused by customer volume, order volume, average order value, pricing, discounts, product demand, store channel performance, or regional behavior.
-
 
 
 ## Business Question
@@ -42,7 +40,6 @@ To answer this, the dashboard investigates:
 - Were specific countries or regions responsible for the difference?
 
 
-
 ## Tools Used
 
 - **SQL Server** — data cleaning, restructuring, and creation of analytical views
@@ -52,7 +49,6 @@ To answer this, the dashboard investigates:
 - **Pandas** — data preparation for forecasting
 - **Matplotlib** — Python forecast visualizations
 - **Statsmodels / SARIMA** — time-series forecasting
-
 
 
 ## Data Pipeline
@@ -76,7 +72,6 @@ Python Forecasting
 Instead of connecting Power BI directly to raw tables, I created cleaned SQL views first. This helped keep the reporting layer organized and made the dashboard easier to analyze, maintain, and explain.
 
 
-
 ## Data Model
 
 The data was structured into a fact and dimension model to make the analysis easier to manage in Power BI.
@@ -98,11 +93,9 @@ The data was structured into a fact and dimension model to make the analysis eas
 This model allowed me to analyze sales by month, customer segment, product category, store type, country, and profitability.
 
 
-
 ## Dashboard Story
 
 The report was designed as a guided business investigation. It starts with overall business performance, then moves into the 2023 sales pattern, then investigates why February performed the best and April performed the worst.
-
 
 
 ### 1. Executive KPI Overview
@@ -123,7 +116,6 @@ This page gives a quick view of business health before moving into the deeper mo
 ![Executive KPI Overview](Screenshots/Executive%20KPI%20Overview.png)
 
 
-
 ### 2. Sales Trend Discovery
 
 This page focuses on discovering the 2023 monthly sales pattern.
@@ -133,7 +125,6 @@ While reviewing sales by month, February stood out as the highest sales month, w
 This discovery changed the project from a general dashboard into a deeper investigation.
 
 ![Sales Trend Discovery](Screenshots/Sales%20Trend%20Discovery.png)
-
 
 
 ### 3. 2023 Peak vs Low Month Investigation
