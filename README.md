@@ -79,7 +79,11 @@ The report includes:
 - 2023 Seasonality Findings
 - Sales Forecast using DAX-based forecasting for public publishing
 
-[Download the Power BI Dashboard](Dashboards/sales-performance-2023-seasonality-analysis.pbix)
+# Power BI Dashboard
+
+View the published Power BI dashboard here:
+
+[Open the Power BI Dashboard](https://app.powerbi.com/view?r=eyJrIjoiYTE3ZTgzNjYtNWEwOS00NTMzLTkyODctY2NlNjhkNGQ3ZDRhIiwidCI6IjNjZjA0NjA1LWMxNTQtNGRkZi04OGE4LTRmOTczNDYyZjllMCJ9)
 
 ---
 
