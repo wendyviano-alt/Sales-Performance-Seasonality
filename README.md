@@ -107,7 +107,7 @@ Some SQL cleaning patterns were applied across multiple tables using the same lo
 
 The full SQL documentation is included here:
 
-[SQL Documentation](Sql/sql_documentation.sql)
+[SQL Documentation](Sql/queries)
 
 ---
 
