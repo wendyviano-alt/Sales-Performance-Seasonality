@@ -343,9 +343,6 @@ This forecast is intended as a planning tool, not a guaranteed prediction.
 9. **Forecasting was added to support future planning.**  
    The original Python SARIMA forecast was kept in the repository, while the published report uses a DAX-based forecast for public compatibility.
 
-10. **Store channel behavior changed between 2022 and 2023.**  
-   By comparing sales by store channel across 2022, 2023, 2024, and 2025, the data showed a clear shift. In 2022, sales were led more by physical stores, while in 2023 online store sales became the stronger channel.
-
 ---
 
 ## Business Recommendations
