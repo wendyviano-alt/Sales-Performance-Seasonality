@@ -177,9 +177,11 @@ The Python version considered:
 
 Python scripts are included here:
 
-- [2026_Forecasted_Sales](Python/2026_Forecasted_Sales)
-- [Forecasted_Orders](Python/Forecasted_Orders)
-- [Actual_vs_Forecasted_Month](Python/Actual_vs_Forecasted_Month)
+[Actual vs Forecasted Sales](Python/Actual_vs_Forecasted_Month)
+
+[Forecasted Sales](Python/2026_Forecasted_Sales)
+
+[Forecasted Orders](Python/Forecasted_Orders)
 
 ### DAX Forecast for Published Report
 
