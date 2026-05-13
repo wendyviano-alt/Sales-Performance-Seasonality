@@ -1,0 +1,537 @@
+SQL Server was used as the data preparation layer.
+
+Instead of connecting Power BI directly to raw source tables, the data was organized into cleaned views. This made the Power BI model easier to understand, validate, and maintain.
+
+The SQL process included:
+
+1. Creating a clean schema for cleaned fact and dimension views
+2. Creating a mart schema for final reporting views
+3. Applying repeated cleaning logic across multiple tables
+4. Renaming columns into business-friendly names
+5. Casting date fields into date-level values
+6. Converting blank strings into NULL
+7. Validating row counts and relationship keys
+8. Handling currency exchange carefully to prevent row duplication
+9. Separating online store records from physical country reporting
+
+Repeated Cleaning Pattern
+-------------------------
+Several cleaning steps were applied across many tables using the same logic. To avoid duplicating the same explanation repeatedly, this file documents the pattern once and then identifies where it was applied.
+
+SCHEMA CREATION
+===============================================================================*/
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.schemas
+    WHERE name = 'clean'
+)
+BEGIN
+    EXEC('CREATE SCHEMA clean');
+END;
+
+/*
+Purpose:
+The clean schema stores the cleaned fact and dimension views used by Power BI. Raw source tables remain untouched.
+*/
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.schemas
+    WHERE name = 'mart'
+)
+BEGIN
+    EXEC('CREATE SCHEMA mart');
+END;
+
+/*
+Purpose:
+The mart schema stores final reporting views used for validation and optional flat reporting checks.
+
+CLEAN VIEW STRUCTURE
+===============================================================================
+
+The clean schema contains the following analytical views:
+
+Dimension Views
+---------------
+- clean.dim_customers
+- clean.dim_stores
+- clean.dim_dates
+- clean.dim_currency_exchange
+- clean.dim_product
+- clean.dim_order_rows
+
+Fact Views
+----------
+- clean.fact_sales
+- clean.fact_orders
+
+These views were created from raw dbo tables such as:
+
+- dbo.customer
+- dbo.store
+- dbo.date
+- dbo.currencyexchange
+- dbo.product
+- dbo.sales
+- dbo.orders
+- dbo.orderrows
+
+The cleaned views support a Power BI model based on facts and dimensions.
+
+EXAMPLE: CLEANING CUSTOMER DATA
+===============================================================================
+
+The customer dimension transformed raw customer fields into clearer reporting columns. This included trimming text fields, converting empty strings to NULL, casting dates, and creating a full customer name.
+
+-- Representative example only.
+-- The same cleaning pattern was applied across several dimension views.
+
+SELECT TOP 100 *
+FROM clean.dim_customers;
+
+STORE DIMENSION AND ONLINE STORE HANDLING
+===============================================================================
+
+The raw store table contained a value of "Online" in the country field.
+Online is not a physical country. If left in the country field, Power BI visuals would mix a sales channel with physical store countries.
+
+The store dimension was cleaned so that:
+
+- Online rows are classified as "Online Store"
+- Physical rows are classified as "Physical Store"
+- Online rows return NULL for country_name
+- Country visuals can be filtered to Physical Store only
+
+This prevents online sales from appearing as a misleading country or blank physical country in visuals.
+
+CREATE OR ALTER VIEW clean.dim_stores AS
+SELECT
+    StoreKey AS store_key,
+    StoreCode AS store_code,
+    GeoAreaKey AS geo_area_key,
+
+    NULLIF(LTRIM(RTRIM(CountryCode)), '') AS country_code,
+
+    CASE
+        WHEN UPPER(LTRIM(RTRIM(CountryName))) = 'ONLINE'
+        THEN NULL
+        ELSE NULLIF(LTRIM(RTRIM(CountryName)), '')
+    END AS country_name,
+
+    CASE
+        WHEN UPPER(LTRIM(RTRIM(CountryName))) = 'ONLINE'
+        THEN 'Online Store'
+        ELSE 'Physical Store'
+    END AS store_type,
+
+    NULLIF(LTRIM(RTRIM(State)), '') AS state,
+
+    CAST(OpenDate AS date) AS open_date,
+    CAST(CloseDate AS date) AS close_date,
+
+    NULLIF(LTRIM(RTRIM(Description)), '') AS store_description,
+    SquareMeters AS square_meters,
+    NULLIF(LTRIM(RTRIM(Status)), '') AS store_status
+FROM dbo.store
+WHERE StoreKey IS NOT NULL;
+
+CURRENCY EXCHANGE HANDLING
+===============================================================================
+
+Problem
+-------
+The currency exchange table contains multiple rows per date and currency because each source currency can convert to multiple target currencies.
+
+For example, one date can include:
+
+- AUD to USD
+- AUD to EUR
+- AUD to GBP
+- USD to USD
+- USD to CAD
+
+Because of this, joining fact tables to currency exchange only by date and currency can duplicate rows.
+
+Correct Join Logic
+------------------
+The correct relationship depends on:
+
+- Order date
+- Source currency
+- Target reporting currency
+
+For this project, USD was used as the reporting currency.
+To make Power BI relationships easier, a single currency_exchange_key was created.
+
+Key Pattern
+-----------
+currency_exchange_key = YYYYMMDD + '-' + FromCurrency + '-' + ToCurrency
+
+Example:
+20230201-USD-USD
+20230201-EUR-USD
+20230201-CAD-USD
+
+CREATE OR ALTER VIEW clean.dim_currency_exchange AS
+SELECT
+    CONCAT(
+        CONVERT(varchar(8), CAST([Date] AS date), 112),
+        '-',
+        NULLIF(LTRIM(RTRIM(FromCurrency)), ''),
+        '-',
+        NULLIF(LTRIM(RTRIM(ToCurrency)), '')
+    ) AS currency_exchange_key,
+
+    CAST([Date] AS date) AS exchange_date,
+    CONVERT(varchar(8), CAST([Date] AS date), 112) AS exchange_date_key,
+
+    NULLIF(LTRIM(RTRIM(FromCurrency)), '') AS from_currency_code,
+    NULLIF(LTRIM(RTRIM(ToCurrency)), '') AS to_currency_code,
+
+    Exchange AS exchange_rate
+FROM dbo.currencyexchange
+WHERE [Date] IS NOT NULL
+  AND FromCurrency IS NOT NULL
+  AND ToCurrency IS NOT NULL;
+
+MART REPORTING VIEW: FACT SALES MODEL
+===============================================================================
+
+The mart sales model combines fact_sales with related dimensions.
+
+Currency exchange was first reviewed carefully before being joined. The final version uses currency_exchange_key to avoid multi-condition joins and prevent duplicate rows.
+
+CREATE OR ALTER VIEW mart.vw_fact_sales_model AS
+SELECT
+    fs.sales_key,
+    fs.order_key,
+    fs.line_number,
+
+    fs.order_date,
+    fs.order_date_key,
+    fs.delivery_date,
+    fs.delivery_date_key,
+
+    fs.customer_key,
+    dc.customer_full_name,
+    dc.gender,
+    dc.city AS customer_city,
+    dc.state_name AS customer_state,
+    dc.country_name AS customer_country,
+
+    fs.store_key,
+    ds.store_code,
+    ds.store_description,
+    ds.country_name AS store_country,
+    ds.state AS store_state,
+    ds.store_status,
+    ds.store_type,
+
+    fs.product_key,
+    dp.product_code,
+    dp.product_name,
+    dp.manufacturer,
+    dp.brand,
+    dp.color,
+    dp.category_name,
+    dp.subcategory_name,
+
+    fs.currency_code,
+    fs.currency_exchange_key,
+    fx.to_currency_code AS reporting_currency_code,
+    fx.exchange_rate AS exchange_rate_to_usd,
+
+    fs.quantity,
+    fs.unit_price,
+    fs.net_price,
+    fs.unit_cost,
+
+    fs.gross_sales_amount,
+    fs.net_sales_amount,
+    fs.cost_amount,
+    fs.margin_amount,
+
+    fs.gross_sales_amount * fx.exchange_rate AS gross_sales_amount_usd,
+    fs.net_sales_amount * fx.exchange_rate AS net_sales_amount_usd,
+    fs.cost_amount * fx.exchange_rate AS cost_amount_usd,
+    fs.margin_amount * fx.exchange_rate AS margin_amount_usd
+FROM clean.fact_sales fs
+LEFT JOIN clean.dim_customers dc
+    ON fs.customer_key = dc.customer_key
+LEFT JOIN clean.dim_stores ds
+    ON fs.store_key = ds.store_key
+LEFT JOIN clean.dim_dates dd
+    ON fs.order_date_key = dd.date_key
+LEFT JOIN clean.dim_product dp
+    ON fs.product_key = dp.product_key
+LEFT JOIN clean.dim_currency_exchange fx
+    ON fs.currency_exchange_key = fx.currency_exchange_key;
+
+MART REPORTING VIEW: FACT ORDERS MODEL
+===============================================================================
+
+The mart orders model combines fact_orders with customer, store, date, order row, product, and currency exchange information.
+When fact_orders is joined to order rows, order-level totals can repeat across multiple rows. For row-level reporting, line-level measures should be used.
+
+CREATE OR ALTER VIEW mart.vw_fact_orders_model AS
+SELECT
+    fo.order_key,
+
+    fo.order_date,
+    fo.order_date_key,
+    fo.delivery_date,
+    fo.delivery_date_key,
+
+    fo.customer_key,
+    dc.customer_full_name,
+    dc.gender,
+    dc.city AS customer_city,
+    dc.state_name AS customer_state,
+    dc.country_name AS customer_country,
+
+    fo.store_key,
+    ds.store_code,
+    ds.store_description,
+    ds.country_name AS store_country,
+    ds.state AS store_state,
+    ds.store_status,
+    ds.store_type,
+
+    dor.order_row_key,
+    dor.row_number,
+    dor.product_key,
+
+    dp.product_code,
+    dp.product_name,
+    dp.manufacturer,
+    dp.brand,
+    dp.color,
+    dp.category_name,
+    dp.subcategory_name,
+
+    fo.currency_code,
+    fo.currency_exchange_key,
+    fx.to_currency_code AS reporting_currency_code,
+    fx.exchange_rate AS exchange_rate_to_usd,
+
+    dor.quantity AS row_quantity,
+    dor.unit_price AS row_unit_price,
+    dor.net_price AS row_net_price,
+    dor.unit_cost AS row_unit_cost,
+
+    dor.gross_line_amount,
+    dor.net_line_amount,
+    dor.line_cost_amount,
+    dor.line_margin_amount,
+
+    dor.gross_line_amount * fx.exchange_rate AS gross_line_amount_usd,
+    dor.net_line_amount * fx.exchange_rate AS net_line_amount_usd,
+    dor.line_cost_amount * fx.exchange_rate AS line_cost_amount_usd,
+    dor.line_margin_amount * fx.exchange_rate AS line_margin_amount_usd,
+
+    fo.total_quantity AS order_total_quantity,
+    fo.gross_order_amount,
+    fo.net_order_amount,
+    fo.order_cost_amount,
+    fo.order_margin_amount,
+
+    fo.gross_order_amount * fx.exchange_rate AS gross_order_amount_usd,
+    fo.net_order_amount * fx.exchange_rate AS net_order_amount_usd,
+    fo.order_cost_amount * fx.exchange_rate AS order_cost_amount_usd,
+    fo.order_margin_amount * fx.exchange_rate AS order_margin_amount_usd
+FROM clean.fact_orders fo
+LEFT JOIN clean.dim_customers dc
+    ON fo.customer_key = dc.customer_key
+LEFT JOIN clean.dim_stores ds
+    ON fo.store_key = ds.store_key
+LEFT JOIN clean.dim_dates dd
+    ON fo.order_date_key = dd.date_key
+LEFT JOIN clean.dim_order_rows dor
+    ON fo.order_key = dor.order_key
+LEFT JOIN clean.dim_product dp
+    ON dor.product_key = dp.product_key
+LEFT JOIN clean.dim_currency_exchange fx
+    ON fo.currency_exchange_key = fx.currency_exchange_key;
+
+VALIDATION CHECKS
+===============================================================================
+
+The following checks were used to confirm that the SQL model was reliable before building the Power BI report.
+Several validation patterns were applied across multiple tables. To avoid duplicating the same explanation repeatedly, the validation approach is grouped by purpose.
+
+Row Count Checks
+===============================================================================
+
+SELECT 'clean.dim_customers' AS object_name, COUNT(*) AS row_count FROM clean.dim_customers
+UNION ALL
+SELECT 'clean.dim_stores', COUNT(*) FROM clean.dim_stores
+UNION ALL
+SELECT 'clean.dim_dates', COUNT(*) FROM clean.dim_dates
+UNION ALL
+SELECT 'clean.dim_currency_exchange', COUNT(*) FROM clean.dim_currency_exchange
+UNION ALL
+SELECT 'clean.dim_product', COUNT(*) FROM clean.dim_product
+UNION ALL
+SELECT 'clean.dim_order_rows', COUNT(*) FROM clean.dim_order_rows
+UNION ALL
+SELECT 'clean.fact_sales', COUNT(*) FROM clean.fact_sales
+UNION ALL
+SELECT 'clean.fact_orders', COUNT(*) FROM clean.fact_orders
+UNION ALL
+SELECT 'mart.vw_fact_sales_model', COUNT(*) FROM mart.vw_fact_sales_model
+UNION ALL
+SELECT 'mart.vw_fact_orders_model', COUNT(*) FROM mart.vw_fact_orders_model;
+
+Duplicate Dimension Key Checks
+Expected result: no rows returned
+===============================================================================
+
+SELECT 
+    'dim_customers' AS table_name,
+    CAST(customer_key AS varchar(100)) AS key_value,
+    COUNT(*) AS duplicate_count
+FROM clean.dim_customers
+GROUP BY customer_key
+HAVING COUNT(*) > 1
+
+UNION ALL
+
+SELECT 
+    'dim_stores',
+    CAST(store_key AS varchar(100)),
+    COUNT(*)
+FROM clean.dim_stores
+GROUP BY store_key
+HAVING COUNT(*) > 1
+
+UNION ALL
+
+SELECT 
+    'dim_product',
+    CAST(product_key AS varchar(100)),
+    COUNT(*)
+FROM clean.dim_product
+GROUP BY product_key
+HAVING COUNT(*) > 1
+
+UNION ALL
+
+SELECT 
+    'dim_dates',
+    CAST(date_key AS varchar(100)),
+    COUNT(*)
+FROM clean.dim_dates
+GROUP BY date_key
+HAVING COUNT(*) > 1
+
+UNION ALL
+
+SELECT 
+    'dim_currency_exchange',
+    CAST(currency_exchange_key AS varchar(100)),
+    COUNT(*)
+FROM clean.dim_currency_exchange
+GROUP BY currency_exchange_key
+HAVING COUNT(*) > 1;
+
+Missing Relationship Checks: fact_sales
+Expected result: all values should be 0
+===============================================================================
+
+SELECT
+    SUM(CASE WHEN dc.customer_key IS NULL THEN 1 ELSE 0 END) AS missing_customers,
+    SUM(CASE WHEN ds.store_key IS NULL THEN 1 ELSE 0 END) AS missing_stores,
+    SUM(CASE WHEN dd.date_key IS NULL THEN 1 ELSE 0 END) AS missing_dates,
+    SUM(CASE WHEN dp.product_key IS NULL THEN 1 ELSE 0 END) AS missing_products,
+    SUM(CASE WHEN fx.currency_exchange_key IS NULL THEN 1 ELSE 0 END) AS missing_currency_exchange
+FROM clean.fact_sales fs
+LEFT JOIN clean.dim_customers dc
+    ON fs.customer_key = dc.customer_key
+LEFT JOIN clean.dim_stores ds
+    ON fs.store_key = ds.store_key
+LEFT JOIN clean.dim_dates dd
+    ON fs.order_date_key = dd.date_key
+LEFT JOIN clean.dim_product dp
+    ON fs.product_key = dp.product_key
+LEFT JOIN clean.dim_currency_exchange fx
+    ON fs.currency_exchange_key = fx.currency_exchange_key;
+
+Source Sales vs Clean Sales Validation
+Expected result: source and clean totals should match
+===============================================================================
+
+SELECT
+    'dbo.sales' AS object_name,
+    COUNT(*) AS row_count,
+    SUM(Quantity) AS total_quantity,
+    SUM(Quantity * UnitPrice) AS gross_sales_amount,
+    SUM(Quantity * NetPrice) AS net_sales_amount,
+    SUM(Quantity * UnitCost) AS cost_amount,
+    SUM(Quantity * (NetPrice - UnitCost)) AS margin_amount
+FROM dbo.sales
+
+UNION ALL
+
+SELECT
+    'clean.fact_sales',
+    COUNT(*) AS row_count,
+    SUM(quantity) AS total_quantity,
+    SUM(gross_sales_amount) AS gross_sales_amount,
+    SUM(net_sales_amount) AS net_sales_amount,
+    SUM(cost_amount) AS cost_amount,
+    SUM(margin_amount) AS margin_amount
+FROM clean.fact_sales;
+
+Currency Exchange Join Validation
+Expected result: row counts match and missing exchange rows = 0
+===============================================================================
+
+SELECT 
+    'clean.fact_sales' AS object_name,
+    COUNT(*) AS row_count
+FROM clean.fact_sales
+
+UNION ALL
+
+SELECT 
+    'mart.vw_fact_sales_model' AS object_name,
+    COUNT(*) AS row_count
+FROM mart.vw_fact_sales_model;
+
+SELECT 
+    COUNT(*) AS missing_currency_exchange_rows
+FROM mart.vw_fact_sales_model
+WHERE exchange_rate_to_usd IS NULL;
+
+SELECT
+    currency_exchange_key,
+    exchange_date,
+    from_currency_code,
+    to_currency_code,
+    COUNT(*) AS duplicate_count
+FROM clean.dim_currency_exchange
+GROUP BY
+    currency_exchange_key,
+    exchange_date,
+    from_currency_code,
+    to_currency_code
+HAVING COUNT(*) > 1;
+
+Online Store Validation
+===============================================================================
+
+This check confirms that online rows are separated into store_type and do not appear as physical countries.
+
+SELECT
+    store_type,
+    country_name,
+    COUNT(*) AS store_count
+FROM clean.dim_stores
+GROUP BY
+    store_type,
+    country_name
+ORDER BY
+    store_type,
+    country_name;
