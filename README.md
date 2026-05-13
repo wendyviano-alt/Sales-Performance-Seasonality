@@ -148,7 +148,7 @@ The measures include:
 - DAX-based forecasting calculations
 - Conditional formatting support measures
 
-[DAX Measures](DAX/measures.md)
+[DAX Measures](DAX/Measures)
 
 These DAX measures helped turn raw fields into business metrics that could answer the main project question.
 
@@ -177,9 +177,9 @@ The Python version considered:
 
 Python scripts are included here:
 
-- [2026_Forecasted_Sales](Python/sales_forecast_sarima.py)
-- [Forecasted_Orders](Python/orders_forecast_sarima.py)
-- [Actual_vs_Forecasted_Month](Python/aov_forecast_sarima.py)
+- [2026_Forecasted_Sales](Python/2026_Forecasted_Sales)
+- [Forecasted_Orders](Python/Forecasted_Orders)
+- [Actual_vs_Forecasted_Month](Python/Actual_vs_Forecasted_Month)
 
 ### DAX Forecast for Published Report
 
