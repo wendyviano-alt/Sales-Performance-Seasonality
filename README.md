@@ -177,9 +177,9 @@ The Python version considered:
 
 Python scripts are included here:
 
-- [Sales Forecast SARIMA](Python/sales_forecast_sarima.py)
-- [Orders Forecast SARIMA](Python/orders_forecast_sarima.py)
-- [AOV Forecast SARIMA](Python/aov_forecast_sarima.py)
+- [2026_Forecasted_Sales](Python/sales_forecast_sarima.py)
+- [Forecasted_Orders](Python/orders_forecast_sarima.py)
+- [Actual_vs_Forecasted_Month](Python/aov_forecast_sarima.py)
 
 ### DAX Forecast for Published Report
 
