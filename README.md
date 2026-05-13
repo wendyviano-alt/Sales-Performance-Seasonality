@@ -14,11 +14,13 @@ The dashboard demonstrates my ability to clean data, build a data model, create 
 
 This project analyzes sales performance using SQL Server, Power BI, DAX, and Python. It focuses on turning raw sales data into a structured business intelligence dashboard.
 
-The project started as a general sales analytics report. While reviewing sales trends over time, I discovered a clear monthly pattern: February consistently appeared as a strong sales month, while April appeared as a weaker sales month.
+The project started as a general sales analytics report. While reviewing sales trends over time, I discovered that 2023 had the strongest overall sales performance in the dataset. After that, I focused more closely on the monthly pattern within 2023 and found that February had the highest sales while April had the lowest sales.
 
-After identifying that pattern, I focused the analysis on the year 2023 because it had the highest overall sales performance in the dataset. Within 2023, February stood out as the highest-sales month, while April stood out as the lowest-sales month.
+To better understand why 2023 performed so strongly, I also analyzed sales by store channel across 2022, 2023, 2024, and 2025. This revealed an important shift: in 2022, sales were led more by physical stores, while in 2023 online store sales became the stronger channel.
 
-That discovery became the main focus of the project. The analysis investigates why February 2023 performed so strongly and why April 2023 underperformed.
+This shift toward online sales may help explain why 2023, especially February, had stronger sales performance. It suggests that online demand, digital visibility, or marketing activity may have played a role. However, because the dataset does not include marketing campaign data, the analysis cannot confirm whether increased advertising, more campaigns, or greater online visibility directly caused the sales increase.
+
+April’s lower sales may also be influenced by seasonal consumer behavior, including tax season. Because April is a period when many customers may be focused on tax payments, refunds, or personal financial planning, it could affect purchase timing or reduce discretionary spending. However, the available dataset does not include tax, income, refund, or consumer behavior data, so this remains a hypothesis rather than a confirmed cause.
 
 The analysis investigates whether the difference between February and April was caused by:
 
@@ -29,7 +31,8 @@ The analysis investigates whether the difference between February and April was 
 - Discounts
 - Store channel behavior
 - Seasonality
-- or, other factors like Tax Season
+- Possible online visibility or marketing-related activity
+- Environment influence like tax season
 
 ---
 
@@ -209,7 +212,7 @@ The reason for using DAX in the published report was practical: it allows the fo
 
 ## Dashboard Story
 
-The report was designed as a guided business investigation. It starts with overall business performance, then moves into the 2023 sales pattern, then investigates why February performed the best and April performed the worst.
+The report was designed as a guided business investigation. It starts with overall business performance, then moves into the 2023 sales pattern, then investigates why February performed the best and April performed the worst. April’s low sales may be partially influenced by tax season, but the current dataset does not prove that. The dashboard identifies the pattern, and future analysis would need external consumer and campaign data to confirm the cause.
 
 ---
 
@@ -313,10 +316,8 @@ This forecast is intended as a planning tool, not a guaranteed prediction.
 
 ## Key Findings
 
-## Key Findings
-
 1. **February 2023 had the highest sales, while April 2023 had the lowest sales.**  
-   After focusing on 2023, February appeared as the strongest month and April appeared as the weakest month. This became the main business question of the project.
+   After focusing on 2023, February appeared as the strongest month and April appeared as the weakest month. This became the main business question of the project.  April was the lowest-sales month in 2023. One possible explanation is tax season, which may influence customer spending behavior or delay purchases. However, the dataset does not include tax-related or consumer financial data, so this cannot be confirmed directly.
 
 2. **Store channel behavior changed over time.**  
    By comparing sales by store channel across 2022, 2023, 2024, and 2025, the data showed a clear shift in sales behavior. In 2022, sales were led more by physical stores, while in 2023 online store sales became stronger. This shift toward online sales may help explain why 2023, especially February, had higher sales activity.
@@ -342,6 +343,9 @@ This forecast is intended as a planning tool, not a guaranteed prediction.
 9. **Forecasting was added to support future planning.**  
    The original Python SARIMA forecast was kept in the repository, while the published report uses a DAX-based forecast for public compatibility.
 
+10. **Store channel behavior changed between 2022 and 2023.**  
+   By comparing sales by store channel across 2022, 2023, 2024, and 2025, the data showed a clear shift. In 2022, sales were led more by physical stores, while in 2023 online store sales became the stronger channel.
+
 ---
 
 ## Business Recommendations
@@ -354,6 +358,7 @@ Based on the analysis, I would recommend:
 - Reviewing online and physical store performance separately because they represent different sales behaviors.
 - Adding marketing campaign data in the future to test whether advertising contributed to peak sales months.
 - Using the forecast as a planning tool for future sales expectations.
+- Compare April sales performance against external seasonal factors, such as tax season, consumer spending trends, and campaign timing, to better understand whether April’s lower sales are seasonal or operational.
 
 ---
 
@@ -386,19 +391,35 @@ The DAX version was used in the published report because it is compatible with p
 
 This project analyzes sales using sales, customer, product, store, date, currency, and order data.
 
-However, the dataset does not include advertising or marketing campaign data. Because of that, the analysis can identify changes in online sales behavior, but it cannot fully confirm whether increased advertising caused the higher sales months.
+One important limitation is that the dataset does not include advertising or marketing campaign data. The analysis showed a shift from physical-store-led sales in 2022 to stronger online sales in 2023. This shift may suggest that marketing activity, more campaigns, better online visibility, or stronger digital demand contributed to the sales increase.
+
+However, without campaign-level data, the report cannot confirm that advertising caused the increase.
+
+Another limitation is that the dataset does not include external seasonal or economic data. April’s lower sales may be influenced by tax season or changes in consumer spending behavior, but this cannot be confirmed with the current data alone.
+
+To test this in the future, I would add external data such as:
+
+- Tax season timing
+- Consumer spending trends
+- Refund timing data
+- Marketing campaign timing
+- Website traffic
+- Promotional calendar
+- Economic indicators
 
 To improve the analysis in the future, I would add:
 
 - Campaign dates
+- Campaign names
 - Products promoted
 - Ad spend
 - Impressions
 - Clicks
 - Conversions
 - Marketing channel
+- Online traffic or website visit data
 
-Another limitation is that the public report uses a DAX-based forecast instead of the original Python SARIMA visual. The DAX forecast is useful for public viewing and dashboard interactivity, but it is not as statistically advanced as the Python SARIMA model.
+Adding this data would make it possible to compare marketing activity directly against sales performance and better explain whether the online sales shift was caused by advertising, organic demand, or another business factor.
 
 ---
 
