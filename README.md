@@ -148,7 +148,7 @@ The measures include:
 - DAX-based forecasting calculations
 - Conditional formatting support measures
 
-[DAX Measures](DAX/Measures)
+[DAX Measures](DAX_Measures/Measures)
 
 These DAX measures helped turn raw fields into business metrics that could answer the main project question.
 
