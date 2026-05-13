@@ -179,7 +179,7 @@ Python scripts are included here:
 
 [Actual vs Forecasted Sales](Python/Actual_vs_Forecasted_Month)
 
-[Forecasted Sales](Python/2026_Forecasted_Sales)
+[Forecasted Sales](Python/2026_Forcasted_Sales)
 
 [Forecasted Orders](Python/Forecasted_Orders)
 
