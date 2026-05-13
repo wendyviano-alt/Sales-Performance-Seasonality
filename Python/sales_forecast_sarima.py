@@ -1,8 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from statsmodels.tsa.statespace.sarimax import SARIMAX
-import matplotlib.dates as mdates
 from matplotlib.ticker import FuncFormatter
+from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 
 
@@ -17,7 +16,6 @@ df['month_key'] = pd.to_numeric(df['month_key'], errors='coerce')
 df['sales'] = pd.to_numeric(df['sales'], errors='coerce')
 
 df = df.dropna(subset=['month_key', 'sales'])
-
 df['month_key'] = df['month_key'].astype(int)
 
 # Convert YYYYMM into date
@@ -26,7 +24,7 @@ df['month_start'] = pd.to_datetime(
     format='%Y%m%d'
 )
 
-# Aggregate sales by month
+# Aggregate to monthly sales
 monthly_sales = (
     df
     .groupby('month_start', as_index=False)['sales']
@@ -36,8 +34,6 @@ monthly_sales = (
 
 monthly_sales = monthly_sales.set_index('month_start')
 monthly_sales = monthly_sales.asfreq('MS')
-
-# Fill missing months if any
 monthly_sales['sales'] = monthly_sales['sales'].interpolate()
 
 
@@ -55,54 +51,52 @@ results = model.fit(disp=False)
 # Forecast next 12 months
 forecast_steps = 12
 forecast = results.get_forecast(steps=forecast_steps)
-
 forecast_values = forecast.predicted_mean
-confidence_intervals = forecast.conf_int()
+
+forecast_df = pd.DataFrame({
+    'month': forecast_values.index,
+    'forecast_sales': forecast_values.values
+})
 
 
 
-plot_start = monthly_sales.index.max() - pd.DateOffset(months=36)
-recent_sales = monthly_sales[monthly_sales.index >= plot_start]
-
-plt.figure(figsize=(13, 5))
-
-plt.plot(
-    recent_sales.index,
-    recent_sales['sales'],
-    label='Actual Sales',
-    linewidth=2
-)
+plt.figure(figsize=(12, 5))
 
 plt.plot(
-    forecast_values.index,
-    forecast_values,
-    label='Forecast Sales',
-    linewidth=2,
-    linestyle='--'
+    forecast_df['month'],
+    forecast_df['forecast_sales'],
+    marker='o',
+    linewidth=2.5,
+    label='Forecast Sales'
 )
 
-plt.fill_between(
-    forecast_values.index,
-    confidence_intervals.iloc[:, 0],
-    confidence_intervals.iloc[:, 1],
-    alpha=0.2,
-    label='Forecast Confidence Range'
+# Add value labels above the line
+for x, y in zip(forecast_df['month'], forecast_df['forecast_sales']):
+    plt.annotate(
+        f'${y / 1_000_000:.1f}M',
+        xy=(x, y),
+        xytext=(0, 12),
+        textcoords='offset points',
+        ha='center',
+        va='bottom',
+        fontsize=9
+    )
+
+# Add extra space above the highest point so labels are not cut off
+max_y = forecast_df['forecast_sales'].max()
+plt.ylim(top=max_y * 1.15)
+
+# Format x-axis as month name
+plt.xticks(
+    forecast_df['month'],
+    forecast_df['month'].dt.strftime('%b %Y'),
+    rotation=45
 )
 
-plt.title('Actual vs Forecasted Monthly Sales', fontsize=14, fontweight='bold')
-plt.xlabel('Month')
-plt.ylabel('Sales USD')
-
-# Show month labels
+# Format y-axis as millions
 ax = plt.gca()
-ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
-ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
+ax.yaxis.set_major_formatter(FuncFormatter(lambda x, pos: f'${x / 1_000_000:.0f}M'))
 
-# Format Y-axis as millions
-ax.yaxis.set_major_formatter(FuncFormatter(lambda x, pos: f'${x/1_000_000:.0f}M'))
-
-plt.xticks(rotation=45)
-plt.legend()
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
 
